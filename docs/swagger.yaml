@@ -1,0 +1,364 @@
+basePath: /api/v1
+definitions:
+  models.LoginRequest:
+    properties:
+      email:
+        example: user1@example.com
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.LoginResponse:
+    properties:
+      avatar_path:
+        example: /avatars/default.png
+        type: string
+      created_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
+      email:
+        example: user1@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      role:
+        example: user
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      updated_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
+    type: object
+  models.Micropost:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      title:
+        example: マイクロポストのタイトル
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - title
+    type: object
+  models.MicropostRequest:
+    properties:
+      title:
+        example: マイクロポストのタイトル
+        type: string
+    required:
+    - title
+    type: object
+  models.MicropostResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.User:
+    properties:
+      avatar_path:
+        example: /avatars/default.png
+        type: string
+      email:
+        example: user1@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      microposts:
+        items:
+          $ref: '#/definitions/models.Micropost'
+        type: array
+      password:
+        example: password123
+        minLength: 6
+        type: string
+      role:
+        example: user
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.UserResponse:
+    properties:
+      avatar_path:
+        example: /avatars/default.png
+        type: string
+      created_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
+      email:
+        example: user1@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      role:
+        example: user
+        type: string
+      updated_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A minimal Go REST API with Gin and GORM.
+  title: Go Gin GORM Minimum API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with the given email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: get current user information from token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Signup user with the given information
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+      summary: Signup user
+      tags:
+      - auth
+  /microposts:
+    get:
+      consumes:
+      - application/json
+      description: get all microposts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Micropost'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List microposts
+      tags:
+      - microposts
+    post:
+      consumes:
+      - application/json
+      description: Create a new micropost with the given title
+      parameters:
+      - description: Micropost object
+        in: body
+        name: micropost
+        required: true
+        schema:
+          $ref: '#/definitions/models.MicropostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.MicropostResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new micropost
+      tags:
+      - microposts
+  /microposts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get micropost by ID
+      parameters:
+      - description: Micropost ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Micropost'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get micropost by ID
+      tags:
+      - microposts
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: get all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - users
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+  /users/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload and update user avatar image
+      parameters:
+      - description: Avatar image file (JPG, JPEG, PNG, GIF only)
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user avatar
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Bearer {token}
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
